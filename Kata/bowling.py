@@ -5,6 +5,7 @@ class Game:
     
     def __init__(self):
         self.balls = 0
+        self.score = 0
         self.pins = []
         for _ in range(21):
             self.pins.append(0)
@@ -15,19 +16,24 @@ class Game:
             self.balls += 1
 
     def getScore(self):
-        score = 0
+        self.score = 0
+        self.frame = 0
         ball = 0
         while ball < self.balls:
             if self.isStrike(ball):
-                score += self.scoreStrike(ball)
+                self.scoreStrike(ball)
+                self.frame += 1
                 ball += 1
             elif self.isSpare(ball):
-                score += self.scoreSpare(ball)
+                self.scoreSpare(ball)
+                self.frame += 1
                 ball += 2
             else:
-                score += self.pins[ball]
+                self.score += self.pins[ball]
+                self.frame += 0.5
                 ball += 1
-        return score
+        print("%d\n" % self.frame)
+        return self.score
 
     def isSpare(self, ball):
         return self.pins[ball] + self.pins[ball + 1] == 10
@@ -36,10 +42,10 @@ class Game:
         return self.pins[ball] == 10
 
     def scoreSpare(self, ball):
-        return 10 + self.pins[ball + 2]
+        self.score += 10 + self.pins[ball + 2]
 
     def scoreStrike(self, ball):
-        return 10 + self.pins[ball + 1] + self.pins[ball + 2]
+        self.score += 10 + self.pins[ball + 1] + self.pins[ball + 2]
 
 class TestBowlingBallKata(unittest.TestCase):
 
