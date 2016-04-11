@@ -17,22 +17,17 @@ class Game:
 
     def getScore(self):
         self.score = 0
-        self.frame = 0
         ball = 0
         while ball < self.balls:
             if self.isStrike(ball):
                 self.scoreStrike(ball)
-                self.frame += 1
                 ball += 1
             elif self.isSpare(ball):
                 self.scoreSpare(ball)
-                self.frame += 1
                 ball += 2
             else:
                 self.score += self.pins[ball]
-                self.frame += 0.5
                 ball += 1
-        print("%d\n" % self.frame)
         return self.score
 
     def isSpare(self, ball):
