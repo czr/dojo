@@ -1,22 +1,26 @@
 import unittest
 from pprint import pprint
 
+
 class DeckEmptyException(Exception):
     pass
+
 
 class Game(object):
     pass
 
+
 class CardDeck(object):
-    
+
     def __init__(self):
         self.deck = [1] * 52
 
     def draw(self):
         try:
-            self.deck.pop()
-        except(IndexError):
-            raise DeckEmptyException    
+            return self.deck.pop()
+        except IndexError:
+            raise DeckEmptyException
+
 
 class TestGame(unittest.TestCase):
 
@@ -28,6 +32,7 @@ class TestGame(unittest.TestCase):
 
     def test_01(self):
         pass
+
 
 class TestCardDeck(unittest.TestCase):
 
