@@ -8,6 +8,11 @@ class DeckEmptyException(Exception):
 
 
 class Game(object):
+    def __init__(self, deck, players):
+        pass
+
+
+class Player(object):
     pass
 
 
@@ -29,14 +34,10 @@ class CardDeck(object):
 
 class TestGame(unittest.TestCase):
 
-    def setUp(self):
-        self.game = Game()
-
-    def tearDown(self):
-        del self.game
-
-    def test_01(self):
-        pass
+    def test_instantiation(self):
+        deck = CardDeck()
+        player_1 = Player()
+        game = Game(deck, [player_1])
 
 
 class TestCardDeck(unittest.TestCase):
