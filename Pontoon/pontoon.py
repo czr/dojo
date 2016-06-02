@@ -9,7 +9,10 @@ class DeckEmptyException(Exception):
 
 class Game(object):
     def __init__(self, deck, players):
-        pass
+        self.players = players
+
+    def play(self):
+        return self.players[0]
 
 
 class Player(object):
@@ -39,6 +42,37 @@ class TestGame(unittest.TestCase):
         player_1 = Player()
         game = Game(deck, [player_1])
 
+    def test_play(self):
+        deck = CardDeck()
+        player_1 = Player()
+        game = Game(deck, [player_1])
+        result = game.play()
+        assert result in [ player_1, None ]
+
+    # def test_deal(self):
+    #     deck = CardDeck()
+    #     player_1 = Player()
+    #     game = Game(deck, [player_1])
+    #     game.deal()
+
+    def test_21_for_one_player(self):
+        deck = mock.MagicMock()
+        deck.draw.side_effect = [11, 10]
+        player_1 = Player()
+        game = Game(deck, [player_1])
+        result = game.play()
+        self.assertIs(result, player_1)
+
+    @mock.mock("random.random")
+    def test_21_for_second_player_always_stick(self):
+        deck = mock.MagicMock()
+        deck.draw.side_effect = [5, 11, 4, 10, 9]
+        # TODO: Control behaviour of players to ensure the result is constant
+        player_1 = Player()
+        player_2 = Player()
+        game = Game(deck, [player_1, player_2])
+        result = game.play()
+        self.assertIs(result, player_2)
 
 class TestCardDeck(unittest.TestCase):
 
@@ -62,7 +96,7 @@ class TestCardDeck(unittest.TestCase):
             4 lots of 11 (aces)
             and 16 10s (10 and picture cards)
         """
-        expected = ( [ 2, 3, 4, 5, 6, 7, 8, 9 ] * 4 + 
+        expected = ( [ 2, 3, 4, 5, 6, 7, 8, 9 ] * 4 +
                     [ 10 ] * 16 +
                     [ 11 ] * 4 )
 
