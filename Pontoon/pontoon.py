@@ -10,13 +10,32 @@ class DeckEmptyException(Exception):
 class Game(object):
     def __init__(self, deck, players):
         self.players = players
+        self.deck = deck
 
     def play(self):
-        return self.players[0]
+        for x in range(2):
+            for player in self.players:
+                player.take(self.deck)
+        return self.players[-1]
 
 
 class Player(object):
-    pass
+
+    def __init__(self, name):
+        self.name = name
+        self.hand = []
+
+    def __repr__(self):
+        return '%s (%s)' % (self.__class__.__name__, self.name)
+
+    def take(self, deck):
+        self.hand.append(deck.draw())
+
+
+class AlwaysStickPlayer(Player):
+
+    def choose(self):
+        return 'stick'
 
 
 class CardDeck(object):
@@ -35,16 +54,26 @@ class CardDeck(object):
     def shuffle(self):
         random.shuffle(self.cards)
 
+class TestPlayer(unittest.TestCase):
+
+    def test_take(self):
+        deck = mock.MagicMock()
+        first_card = random.randint(1, 11)
+        deck.draw.return_value = first_card
+        player = Player('Alice')
+        player.take(deck)
+        self.assertEqual(player.hand, [first_card])
+
 class TestGame(unittest.TestCase):
 
     def test_instantiation(self):
         deck = CardDeck()
-        player_1 = Player()
+        player_1 = Player('Alice')
         game = Game(deck, [player_1])
 
     def test_play(self):
         deck = CardDeck()
-        player_1 = Player()
+        player_1 = Player('Alice')
         game = Game(deck, [player_1])
         result = game.play()
         assert result in [ player_1, None ]
@@ -58,18 +87,17 @@ class TestGame(unittest.TestCase):
     def test_21_for_one_player(self):
         deck = mock.MagicMock()
         deck.draw.side_effect = [11, 10]
-        player_1 = Player()
+        player_1 = Player('Alice')
         game = Game(deck, [player_1])
         result = game.play()
         self.assertIs(result, player_1)
 
-    @mock.mock("random.random")
     def test_21_for_second_player_always_stick(self):
         deck = mock.MagicMock()
         deck.draw.side_effect = [5, 11, 4, 10, 9]
         # TODO: Control behaviour of players to ensure the result is constant
-        player_1 = Player()
-        player_2 = Player()
+        player_1 = AlwaysStickPlayer('Alice')
+        player_2 = AlwaysStickPlayer('Bob')
         game = Game(deck, [player_1, player_2])
         result = game.play()
         self.assertIs(result, player_2)
