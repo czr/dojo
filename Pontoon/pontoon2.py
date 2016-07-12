@@ -54,8 +54,45 @@ class GameHistoryTest(unittest.TestCase):
         winners = calculate_pontoon_winners(moves)
         self.assertItemsEqual(winners, [player2])
 
-    def test_generate_simple_game(self):
-        fail
+    def test_player_first_move(self):
+        player1 = mock.MagicMock()
+        old_moves = []
+        deck = [2, 4]
+        # player_wants_to_twist will not be consulted because the player
+        # has scored less than 15 points
+        new_moves = calculate_move(deck, old_moves, player1, lambda:False)
+        self.assertEqual(new_moves, [(player1, 2)])
+        self.assertItemsEqual(deck, [4])
+        self.assertItemsEqual(old_moves, [])
+
+    def test_player_will_stick(self):
+        player1 = mock.MagicMock()
+        old_moves = [(player1, 10), (player1, 8)]
+        deck = [2, 4]
+        new_moves = calculate_move(deck, old_moves, player1, lambda:False)
+        self.assertEqual(new_moves, old_moves)
+        self.assertItemsEqual(deck, [2, 4])
+        self.assertItemsEqual(old_moves, [(player1, 10), (player1, 8)])
+
+    def test_player_will_twist(self):
+        player1 = mock.MagicMock()
+        old_moves = [(player1, 10), (player1, 8)]
+        deck = [2, 4]
+        new_moves = calculate_move(deck, old_moves, player1, lambda:True)
+        self.assertEqual(new_moves, [(player1, 10), (player1, 8), (player1, 2)])
+        self.assertItemsEqual(deck, [4])
+        self.assertItemsEqual(old_moves, [(player1, 10), (player1, 8)])
+
+    def test_player_cant_move_if_bust(self):
+        self.fail("boom")
+
+def calculate_move(deck, moves, player, player_wants_to_twist):
+    score = sum( value for (p, value) in moves if p == player )
+    new_moves = moves[:]
+    if score < 15 or player_wants_to_twist():
+        card = deck.pop(0)
+        new_moves.append((player, card))
+    return new_moves
 
 def calculate_pontoon_winners(moves):
     sums = {}
@@ -73,8 +110,6 @@ def calculate_pontoon_winners(moves):
             elif sums[player] == highest_score:
                 winners.append(player)
     return winners
-
-
 
 if __name__ == '__main__':
     unittest.main()
