@@ -62,7 +62,7 @@ class GameHistoryTest(unittest.TestCase):
         deck = [2, 4]
         # player_wants_to_twist will not be consulted because the player
         # has scored less than 15 points
-        new_moves = calculate_move(deck, game_history, player1, lambda:False)
+        new_moves = game_history.calculate_move(deck, player1, lambda:False)
         self.assertEqual(new_moves, [(player1, 2)])
         self.assertItemsEqual(deck, [4])
         self.assertItemsEqual(game_history.moves(), [])
@@ -71,7 +71,7 @@ class GameHistoryTest(unittest.TestCase):
         player1 = mock.MagicMock()
         game_history = GameHistory([(player1, 10), (player1, 8)])
         deck = [2, 4]
-        new_moves = calculate_move(deck, game_history, player1, lambda:False)
+        new_moves = game_history.calculate_move(deck, player1, lambda:False)
         self.assertEqual(new_moves, game_history.moves())
         self.assertItemsEqual(deck, [2, 4])
         self.assertItemsEqual(game_history.moves(), [(player1, 10), (player1, 8)])
@@ -80,7 +80,7 @@ class GameHistoryTest(unittest.TestCase):
         player1 = mock.MagicMock()
         game_history = GameHistory([(player1, 10), (player1, 8)])
         deck = [2, 4]
-        new_moves = calculate_move(deck, game_history, player1, lambda:True)
+        new_moves = game_history.calculate_move(deck, player1, lambda:True)
         self.assertEqual(new_moves, [(player1, 10), (player1, 8), (player1, 2)])
         self.assertItemsEqual(deck, [4])
         self.assertItemsEqual(game_history.moves(), [(player1, 10), (player1, 8)])
@@ -92,15 +92,6 @@ class GameHistoryTest(unittest.TestCase):
         new_moves = game_history.calculate_move(deck, player1, lambda:True)
         self.assertEqual(new_moves, game_history.moves())
         self.assertEqual(deck,[ 5 ])
-
-def calculate_move(deck, game_history, player, player_wants_to_twist):
-    moves = game_history.moves()
-    score = sum( value for (p, value) in moves if p == player )
-    new_moves = moves[:]
-    if score < 15 or (player_wants_to_twist() and score <= 21):
-        card = deck.pop(0)
-        new_moves.append((player, card))
-    return new_moves
 
 def calculate_pontoon_winners(game_history):
     sums = game_history.scores()
@@ -129,6 +120,15 @@ class GameHistory:
         for move in self.moves():
             sums[move[0]] = sums.get(move[0], 0) + move[1]
         return sums
+
+    def calculate_move(self, deck, player, player_wants_to_twist):
+        moves = self.moves()
+        score = sum( value for (p, value) in moves if p == player )
+        new_moves = moves[:]
+        if score < 15 or (player_wants_to_twist() and score <= 21):
+            card = deck.pop(0)
+            new_moves.append((player, card))
+        return new_moves
 
 if __name__ == '__main__':
     unittest.main()
