@@ -10,6 +10,13 @@ class GameHistoryTest(unittest.TestCase):
         winners = calculate_pontoon_winners(game_history)
         self.assertItemsEqual(winners, [player])
 
+    def test_one_player_stuck(self):
+        player = mock.MagicMock()
+        game_history = GameHistory([(player, 10), (player, 8), (player, None)])
+        winners = calculate_pontoon_winners(game_history)
+        self.assertItemsEqual(winners, [player])
+
+
     def test_one_player_bust(self):
         player = mock.MagicMock()
         game_history = GameHistory([(player, 10), (player, 11), (player, 2)])
@@ -72,7 +79,7 @@ class GameHistoryTest(unittest.TestCase):
         game_history = GameHistory([(player1, 10), (player1, 8)])
         deck = [2, 4]
         new_moves = game_history.calculate_move(deck, player1, lambda:False)
-        self.assertEqual(new_moves, game_history.moves())
+        self.assertEqual(new_moves, game_history.moves() + [(player1, None)])
         self.assertItemsEqual(deck, [2, 4])
         self.assertItemsEqual(game_history.moves(), [(player1, 10), (player1, 8)])
 
@@ -88,6 +95,14 @@ class GameHistoryTest(unittest.TestCase):
     def test_player_cant_move_if_bust(self):
         player1 = mock.MagicMock()
         game_history = GameHistory([(player1, 10), (player1, 8), (player1, 10)])
+        deck = [ 5 ]
+        new_moves = game_history.calculate_move(deck, player1, lambda:True)
+        self.assertEqual(new_moves, game_history.moves())
+        self.assertEqual(deck,[ 5 ])
+
+    def test_player_cant_move_if_stuck(self):
+        player1 = mock.MagicMock()
+        game_history = GameHistory([(player1, 10), (player1, 8), (player1, None)])
         deck = [ 5 ]
         new_moves = game_history.calculate_move(deck, player1, lambda:True)
         self.assertEqual(new_moves, game_history.moves())
@@ -118,14 +133,16 @@ class GameHistory:
     def scores(self):
         sums = {}
         for move in self.moves():
-            sums[move[0]] = sums.get(move[0], 0) + move[1]
+            if move[1] is not None:
+                sums[move[0]] = sums.get(move[0], 0) + move[1]
         return sums
 
     def calculate_move(self, deck, player, player_wants_to_twist):
         moves = self.moves()
-        score = sum( value for (p, value) in moves if p == player )
+        score = sum( value for (p, value) in moves if p == player and value is not None)
+        player_has_stuck = sum(1 for (p,value) in moves if p == player and value is None)
         new_moves = moves[:]
-        if score < 15 or (player_wants_to_twist() and score <= 21):
+        if score < 15 or (player_wants_to_twist() and score <= 21) and not player_has_stuck:
             card = deck.pop(0)
             new_moves.append((player, card))
         return new_moves
