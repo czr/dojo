@@ -78,7 +78,7 @@ class GameStateTest(unittest.TestCase):
     def test_player_will_stick(self):
         player1 = mock.MagicMock()
         game_state = GameState([player1], [2, 4], [(player1, 10), (player1, 8)])
-        new_game_state = game_state.take_turn(player1, lambda:False)
+        new_game_state = game_state.take_turn(lambda:False)
         self.assertEqual(new_game_state.moves(), game_state.moves() + [(player1, None)])
         self.assertEqual(new_game_state.deck(), [2, 4])
         self.assertEqual(game_state.moves(), [(player1, 10), (player1, 8)])
@@ -86,7 +86,7 @@ class GameStateTest(unittest.TestCase):
     def test_player_will_twist(self):
         player1 = mock.MagicMock()
         game_state = GameState([player1], [2, 4], [(player1, 10), (player1, 8)])
-        new_game_state = game_state.take_turn(player1, lambda:True)
+        new_game_state = game_state.take_turn(lambda:True)
         self.assertEqual(new_game_state.moves(), [(player1, 10), (player1, 8), (player1, 2)])
         self.assertEqual(new_game_state.deck(), [4])
         self.assertEqual(game_state.moves(), [(player1, 10), (player1, 8)])
@@ -94,7 +94,7 @@ class GameStateTest(unittest.TestCase):
     def test_player_cant_move_if_bust(self):
         player1 = mock.MagicMock()
         game_state = GameState([player1], [5], [(player1, 10), (player1, 8), (player1, 10)])
-        new_game_state = game_state.take_turn(player1, lambda:True)
+        new_game_state = game_state.take_turn(lambda:True)
         self.assertEqual(new_game_state.moves(), game_state.moves() + [(player1, None)])
         self.assertEqual(new_game_state.deck(), [5])
 
@@ -106,9 +106,19 @@ class GameStateTest(unittest.TestCase):
             (player1, 7), (player2, 8),
             (player1, None), (player2, 3),
         ])
-        new_game_state = game_state.take_turn(player1, lambda:True)
+        new_game_state = game_state.take_turn(lambda:True)
         self.assertEqual(new_game_state.moves(), game_state.moves() + [(player1, None)])
         self.assertEqual(new_game_state.deck(), [5])
+
+    def test_player2_takes_turn(self):
+        player1 = mock.MagicMock()
+        player2 = mock.MagicMock()
+        game_state = GameState([player1, player2], [5], [
+            (player1, 10),
+        ])
+        new_game_state = game_state.take_turn(lambda:True)
+        self.assertEqual(new_game_state.moves(), game_state.moves() + [(player2, 5)])
+        self.assertEqual(new_game_state.deck(), [])
 
     def test_game_finished_one_player_stuck(self):
         player = mock.MagicMock()
@@ -156,6 +166,34 @@ class GameStateTest(unittest.TestCase):
         game_state = GameState([player1, player2], [],
                                [(player1,   10)])
         self.assertFalse(game_state.finished())
+
+    def test_next_player_one_player_no_moves(self):
+        player = mock.MagicMock()
+        game_state = GameState([player], [], [])
+        self.assertEqual(game_state.get_next_player(), player)
+
+    def test_next_player_one_player_one_move(self):
+        player = mock.MagicMock()
+        game_state = GameState([player], [], [(player, 5)])
+        self.assertEqual(game_state.get_next_player(), player)
+
+    def test_next_player_two_players_no_moves(self):
+        player1 = mock.MagicMock()
+        player2 = mock.MagicMock()
+        game_state = GameState([player1, player2], [], [])
+        self.assertEqual(game_state.get_next_player(), player1)
+
+    def test_next_player_two_players_one_move(self):
+        player1 = mock.MagicMock()
+        player2 = mock.MagicMock()
+        game_state = GameState([player1, player2], [], [(player1, 5)])
+        self.assertEqual(game_state.get_next_player(), player2)
+
+    def test_next_player_two_players_two_moves(self):
+        player1 = mock.MagicMock()
+        player2 = mock.MagicMock()
+        game_state = GameState([player1, player2], [], [(player1, 5), (player2, 5)])
+        self.assertEqual(game_state.get_next_player(), player1)
 
     # def test_game_loop(self):
     #     game_state = GameState(…)
@@ -208,11 +246,21 @@ class GameState:
                 return False
         return True
 
-    def take_turn(self, player, player_wants_to_twist):
+    def take_turn(self, player_wants_to_twist):
+        if len(self.moves()):
+            last_player = self.moves()[-1][0]
+        else:
+            last_player = self.players()[-1]
+        last_player_position = self.players().index(last_player)
+        next_player_position = (last_player_position + 1) % len(self.players())
+        player = self.players()[next_player_position]
         will_twist = self.player_will_twist(player, player_wants_to_twist)
         deck = self.deck()[:]
         card = deck.pop(0) if will_twist else None
         return GameState(self.players(), deck, self.moves()[:] + [(player, card)])
+
+    def get_next_player(self):
+        return None
 
     def player_will_twist(self, player, player_wants_to_twist):
         moves = self.moves()
