@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 
+# TODO:
+# - Move calculate_pontoon_winners into GameState
+# - Change player mocks to real players or mocks of real players
+
 import mock
 import unittest
-
+import random
 
 class GameStateTest(unittest.TestCase):
 
@@ -66,10 +70,11 @@ class GameStateTest(unittest.TestCase):
 
     def test_player_first_move(self):
         player1 = mock.MagicMock()
+        player1.wants_to_twist.return_value = False
         game_state = GameState([player1], [2, 4], [])
         # player_wants_to_twist will not be consulted because the player
         # has scored less than 15 points
-        new_game_state = game_state.take_turn(lambda:False)
+        new_game_state = game_state.take_turn()
         self.assertEqual(new_game_state.moves(), [(player1, 2)])
         self.assertEqual(new_game_state.deck(), [4])
         self.assertEqual(game_state.moves(), [])
@@ -77,46 +82,51 @@ class GameStateTest(unittest.TestCase):
 
     def test_player_will_stick(self):
         player1 = mock.MagicMock()
+        player1.wants_to_twist.return_value = False
         game_state = GameState([player1], [2, 4], [(player1, 10), (player1, 8)])
-        new_game_state = game_state.take_turn(lambda:False)
+        new_game_state = game_state.take_turn()
         self.assertEqual(new_game_state.moves(), game_state.moves() + [(player1, None)])
         self.assertEqual(new_game_state.deck(), [2, 4])
         self.assertEqual(game_state.moves(), [(player1, 10), (player1, 8)])
 
     def test_player_will_twist(self):
         player1 = mock.MagicMock()
+        player1.wants_to_twist.return_value = True
         game_state = GameState([player1], [2, 4], [(player1, 10), (player1, 8)])
-        new_game_state = game_state.take_turn(lambda:True)
+        new_game_state = game_state.take_turn()
         self.assertEqual(new_game_state.moves(), [(player1, 10), (player1, 8), (player1, 2)])
         self.assertEqual(new_game_state.deck(), [4])
         self.assertEqual(game_state.moves(), [(player1, 10), (player1, 8)])
 
     def test_player_cant_move_if_bust(self):
         player1 = mock.MagicMock()
+        player1.wants_to_twist.return_value = True
         game_state = GameState([player1], [5], [(player1, 10), (player1, 8), (player1, 10)])
-        new_game_state = game_state.take_turn(lambda:True)
+        new_game_state = game_state.take_turn()
         self.assertEqual(new_game_state.moves(), game_state.moves() + [(player1, None)])
         self.assertEqual(new_game_state.deck(), [5])
 
     def test_player_cant_move_if_stuck(self):
         player1 = mock.MagicMock()
-        player2 = mock.MagicMock()
+        player1.wants_to_twist.return_value = True
+        player2 = Player()
         game_state = GameState([player1, player2], [5], [
             (player1, 10), (player2, 8),
             (player1, 7), (player2, 8),
             (player1, None), (player2, 3),
         ])
-        new_game_state = game_state.take_turn(lambda:True)
+        new_game_state = game_state.take_turn()
         self.assertEqual(new_game_state.moves(), game_state.moves() + [(player1, None)])
         self.assertEqual(new_game_state.deck(), [5])
 
     def test_player2_takes_turn(self):
-        player1 = mock.MagicMock()
-        player2 = mock.MagicMock()
+        player1 = Player()
+        player2 = mock.MagicMock(Player)
+        player2.wants_to_twist.return_value = True
         game_state = GameState([player1, player2], [5], [
             (player1, 10),
         ])
-        new_game_state = game_state.take_turn(lambda:True)
+        new_game_state = game_state.take_turn()
         self.assertEqual(new_game_state.moves(), game_state.moves() + [(player2, 5)])
         self.assertEqual(new_game_state.deck(), [])
 
@@ -195,10 +205,19 @@ class GameStateTest(unittest.TestCase):
         game_state = GameState([player1, player2], [], [(player1, 5), (player2, 5)])
         self.assertEqual(game_state.get_next_player(), player1)
 
+
+
     # def test_game_loop(self):
-    #     game_state = GameState(…)
+    #     player1 = mock.MagicMock()
+    #     player2 = mock.MagicMock()
+    #     game_state = GameState([player1, player2],…)
     #     while not game_state.finished():
     #         game_state = game_state.take_turn(…)
+
+class PlayerTests(unittest.TestCase):
+    def test_wants_to_twist(self):
+        player = Player()
+        self.assertIsInstance(player.wants_to_twist(), bool)
 
 def calculate_pontoon_winners(game_state):
     sums = game_state.scores()
@@ -246,7 +265,14 @@ class GameState:
                 return False
         return True
 
-    def take_turn(self, player_wants_to_twist):
+    def take_turn(self):
+        player = self.get_next_player()
+        will_twist = self.player_will_twist(player)
+        deck = self.deck()[:]
+        card = deck.pop(0) if will_twist else None
+        return GameState(self.players(), deck, self.moves()[:] + [(player, card)])
+
+    def get_next_player(self):
         if len(self.moves()):
             last_player = self.moves()[-1][0]
         else:
@@ -254,15 +280,9 @@ class GameState:
         last_player_position = self.players().index(last_player)
         next_player_position = (last_player_position + 1) % len(self.players())
         player = self.players()[next_player_position]
-        will_twist = self.player_will_twist(player, player_wants_to_twist)
-        deck = self.deck()[:]
-        card = deck.pop(0) if will_twist else None
-        return GameState(self.players(), deck, self.moves()[:] + [(player, card)])
+        return player
 
-    def get_next_player(self):
-        return None
-
-    def player_will_twist(self, player, player_wants_to_twist):
+    def player_will_twist(self, player):
         moves = self.moves()
         score = sum(value for (p, value) in moves
                           if p == player and value is not None)
@@ -271,7 +291,12 @@ class GameState:
         player_must_twist = score < 15
         player_may_twist = not player_has_stuck and score <= 21
         return (player_must_twist
-                or (player_may_twist and player_wants_to_twist()))
+                or (player_may_twist and player.wants_to_twist()))
+
+
+class Player:
+    def wants_to_twist(self):
+        return random.choice([True, False])
 
 
 if __name__ == '__main__':
