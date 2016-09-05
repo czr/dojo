@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
 # TODO:
-# - Move calculate_pontoon_winners into GameState
-# - Change player mocks to real players or mocks of real players
 
 import mock
 import unittest
@@ -11,65 +9,65 @@ import random
 class GameStateTest(unittest.TestCase):
 
     def test_one_player(self):
-        player = mock.MagicMock()
+        player = Player()
         game_state = GameState([player], [], [(player, 10), (player, 11)])
-        winners = calculate_pontoon_winners(game_state)
+        winners = game_state.calculate_winners()
         self.assertItemsEqual(winners, [player])
 
     def test_one_player_stuck(self):
-        player = mock.MagicMock()
+        player = Player()
         game_state = GameState([player], [], [(player, 10), (player, 8), (player, None)])
-        winners = calculate_pontoon_winners(game_state)
+        winners = game_state.calculate_winners()
         self.assertItemsEqual(winners, [player])
 
     def test_one_player_bust(self):
-        player = mock.MagicMock()
+        player = Player()
         game_state = GameState([player], [], [(player, 10), (player, 11), (player, 2)])
-        winners = calculate_pontoon_winners(game_state)
+        winners = game_state.calculate_winners()
         self.assertItemsEqual(winners, [])
 
     def test_two_players_second_win(self):
-        player1 = mock.MagicMock()
-        player2 = mock.MagicMock()
+        player1 = Player()
+        player2 = Player()
         game_state = GameState([player1, player2], [], [(player1, 10), (player2, 10), (player1, 7), (player2, 8)])
-        winners = calculate_pontoon_winners(game_state)
+        winners = game_state.calculate_winners()
         self.assertItemsEqual(winners, [player2])
 
     def test_two_players_first_win(self):
-        player1 = mock.MagicMock()
-        player2 = mock.MagicMock()
+        player1 = Player()
+        player2 = Player()
         game_state = GameState([player1, player2], [], [(player1, 10), (player2, 10), (player1, 8), (player2, 7)])
-        winners = calculate_pontoon_winners(game_state)
+        winners = game_state.calculate_winners()
         self.assertItemsEqual(winners, [player1])
 
     def test_two_players_first_passed_bust_second_win(self):
-        player1 = mock.MagicMock()
-        player2 = mock.MagicMock()
+        player1 = Player()
+        player2 = Player()
         game_state = GameState([player1, player2], [], [(player1, 10), (player2, 10), (player1, 7), (player2, 8), (player1, 5)])
-        winners = calculate_pontoon_winners(game_state)
+        winners = game_state.calculate_winners()
         self.assertItemsEqual(winners, [player2])
 
     def test_two_players_with_same_score(self):
-        player1 = mock.MagicMock()
-        player2 = mock.MagicMock()
+        player1 = Player()
+        player2 = Player()
         game_state = GameState([player1, player2], [], [(player1, 10), (player2, 10), (player1, 7), (player2, 7)])
-        winners = calculate_pontoon_winners(game_state)
+        winners = game_state.calculate_winners()
         self.assertItemsEqual(winners, [player2, player1])
 
     def test_three_players_one_winner_one_bust(self):
-        player1 = mock.MagicMock()
-        player2 = mock.MagicMock()
-        player3 = mock.MagicMock()
+        player1 = Player()
+        player2 = Player()
+        player3 = Player()
         game_state = GameState([player1, player2, player3], [], [
             (player1, 10), (player2, 4), (player3, 10),
             (player1, 10), (player2, 5), (player3,  5),
             (player1,  2), (player2, 9)
         ])
-        winners = calculate_pontoon_winners(game_state)
+        winners = game_state.calculate_winners()
         self.assertItemsEqual(winners, [player2])
 
     def test_player_first_move(self):
-        player1 = mock.MagicMock()
+        player1 = mock.MagicMock(Player)
         player1.wants_to_twist.return_value = False
         game_state = GameState([player1], [2, 4], [])
         # player_wants_to_twist will not be consulted because the player
@@ -81,7 +79,7 @@ class GameStateTest(unittest.TestCase):
         self.assertEqual(game_state.deck(), [2, 4])
 
     def test_player_will_stick(self):
-        player1 = mock.MagicMock()
+        player1 = mock.MagicMock(Player)
         player1.wants_to_twist.return_value = False
         game_state = GameState([player1], [2, 4], [(player1, 10), (player1, 8)])
         new_game_state = game_state.take_turn()
@@ -90,7 +88,7 @@ class GameStateTest(unittest.TestCase):
         self.assertEqual(game_state.moves(), [(player1, 10), (player1, 8)])
 
     def test_player_will_twist(self):
-        player1 = mock.MagicMock()
+        player1 = mock.MagicMock(Player)
         player1.wants_to_twist.return_value = True
         game_state = GameState([player1], [2, 4], [(player1, 10), (player1, 8)])
         new_game_state = game_state.take_turn()
@@ -99,7 +97,7 @@ class GameStateTest(unittest.TestCase):
         self.assertEqual(game_state.moves(), [(player1, 10), (player1, 8)])
 
     def test_player_cant_move_if_bust(self):
-        player1 = mock.MagicMock()
+        player1 = mock.MagicMock(Player)
         player1.wants_to_twist.return_value = True
         game_state = GameState([player1], [5], [(player1, 10), (player1, 8), (player1, 10)])
         new_game_state = game_state.take_turn()
@@ -107,7 +105,7 @@ class GameStateTest(unittest.TestCase):
         self.assertEqual(new_game_state.deck(), [5])
 
     def test_player_cant_move_if_stuck(self):
-        player1 = mock.MagicMock()
+        player1 = mock.MagicMock(Player)
         player1.wants_to_twist.return_value = True
         player2 = Player()
         game_state = GameState([player1, player2], [5], [
@@ -131,18 +129,18 @@ class GameStateTest(unittest.TestCase):
         self.assertEqual(new_game_state.deck(), [])
 
     def test_game_finished_one_player_stuck(self):
-        player = mock.MagicMock()
+        player = Player()
         game_state = GameState([player], [], [(player, None)])
         self.assertTrue(game_state.finished())
 
     def test_game_finished_one_player_no_moves(self):
-        player = mock.MagicMock()
+        player = Player()
         game_state = GameState([player], [], [])
         self.assertFalse(game_state.finished())
 
     def test_game_finished_two_players_one_stuck(self):
-        player1 = mock.MagicMock()
-        player2 = mock.MagicMock()
+        player1 = Player()
+        player2 = Player()
         game_state = GameState([player1, player2], [],
                                [(player1,   10), (player2, 10),
                                 (player1,    8), (player2,  2),
@@ -150,8 +148,8 @@ class GameStateTest(unittest.TestCase):
         self.assertFalse(game_state.finished())
 
     def test_game_finished_two_players_one_stuck_one_bust(self):
-        player1 = mock.MagicMock()
-        player2 = mock.MagicMock()
+        player1 = Player()
+        player2 = Player()
         game_state = GameState([player1, player2], [],
                                [(player1,   10), (player2, 10),
                                 (player1,    8), (player2,  2),
@@ -160,8 +158,8 @@ class GameStateTest(unittest.TestCase):
         self.assertFalse(game_state.finished())
 
     def test_game_finished_two_players_one_stuck_one_bust_then_nones(self):
-        player1 = mock.MagicMock()
-        player2 = mock.MagicMock()
+        player1 = Player()
+        player2 = Player()
         game_state = GameState([player1, player2], [],
                                [(player1,   10), (player2, 10),
                                 (player1,    8), (player2,  2),
@@ -171,68 +169,70 @@ class GameStateTest(unittest.TestCase):
         self.assertTrue(game_state.finished())
 
     def test_game_finished_two_players_one_move(self):
-        player1 = mock.MagicMock()
-        player2 = mock.MagicMock()
+        player1 = Player()
+        player2 = Player()
         game_state = GameState([player1, player2], [],
                                [(player1,   10)])
         self.assertFalse(game_state.finished())
 
     def test_next_player_one_player_no_moves(self):
-        player = mock.MagicMock()
+        player = Player()
         game_state = GameState([player], [], [])
         self.assertEqual(game_state.get_next_player(), player)
 
     def test_next_player_one_player_one_move(self):
-        player = mock.MagicMock()
+        player = Player()
         game_state = GameState([player], [], [(player, 5)])
         self.assertEqual(game_state.get_next_player(), player)
 
     def test_next_player_two_players_no_moves(self):
-        player1 = mock.MagicMock()
-        player2 = mock.MagicMock()
+        player1 = Player()
+        player2 = Player()
         game_state = GameState([player1, player2], [], [])
         self.assertEqual(game_state.get_next_player(), player1)
 
     def test_next_player_two_players_one_move(self):
-        player1 = mock.MagicMock()
-        player2 = mock.MagicMock()
+        player1 = Player()
+        player2 = Player()
         game_state = GameState([player1, player2], [], [(player1, 5)])
         self.assertEqual(game_state.get_next_player(), player2)
 
     def test_next_player_two_players_two_moves(self):
-        player1 = mock.MagicMock()
-        player2 = mock.MagicMock()
+        player1 = Player()
+        player2 = Player()
         game_state = GameState([player1, player2], [], [(player1, 5), (player2, 5)])
         self.assertEqual(game_state.get_next_player(), player1)
 
-
+    def test_generate_deck(self):
+        deck = generate_deck()
+        self.assertEqual(len(deck), 52)
+        self.assertEqual(min(deck), 2)
+        self.assertEqual(max(deck), 11)
+        self.assertEqual(deck.count(2), 4)
+        self.assertEqual(deck.count(10), 16)
 
     # def test_game_loop(self):
-    #     player1 = mock.MagicMock()
-    #     player2 = mock.MagicMock()
-    #     game_state = GameState([player1, player2],…)
+    #     player1 = mock.MagicMock(Player)
+    #     player2 = mock.MagicMock(Player)
+    #     deck = generate_deck()
+    #     game_state = GameState([player1, player2], deck, [])
     #     while not game_state.finished():
-    #         game_state = game_state.take_turn(…)
+    #         game_state = game_state.take_turn()
+    #     print game_state.calculate_winners()
 
 class PlayerTests(unittest.TestCase):
     def test_wants_to_twist(self):
         player = Player()
         self.assertIsInstance(player.wants_to_twist(), bool)
 
-def calculate_pontoon_winners(game_state):
-    sums = game_state.scores()
-    # here we have sums with all the totals per player:
-    # { player1 : 17, player2: 18 }
-    highest_score = 0
-    winners = []
-    for player in sums.keys():
-        if sums[player] <= 21:
-            if sums[player] > highest_score:
-                winners = [player]
-                highest_score = sums[player]
-            elif sums[player] == highest_score:
-                winners.append(player)
-    return winners
+
+def generate_deck():
+    numerics = [x for x in range(2,12)] * 4
+    pictures = [10] * 12
+    deck = numerics + pictures
+    random.shuffle(deck)
+    return deck
+
 
 class GameState:
     def __init__(self, players, deck, moves):
@@ -293,6 +293,20 @@ class GameState:
         return (player_must_twist
                 or (player_may_twist and player.wants_to_twist()))
 
+    def calculate_winners(self):
+        sums = self.scores()
+        # here we have sums with all the totals per player:
+        # { player1 : 17, player2: 18 }
+        highest_score = 0
+        winners = []
+        for player in sums.keys():
+            if sums[player] <= 21:
+                if sums[player] > highest_score:
+                    winners = [player]
+                    highest_score = sums[player]
+                elif sums[player] == highest_score:
+                    winners.append(player)
+        return winners
 
 class Player:
     def wants_to_twist(self):
