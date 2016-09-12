@@ -5,7 +5,7 @@ import random
 class Game(object):
 
     def __init__(self, num_players, deck=None):
-        self.players = [Player() for x in range(num_players)]
+        self.players = [Player(x) for x in range(num_players)]
         if deck is None:
             deck = self.generate_default_deck()
         self.deck = deck
