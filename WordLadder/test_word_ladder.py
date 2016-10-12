@@ -9,15 +9,17 @@ class WordLadderTest(unittest.TestCase):
         self.assertEqual(word_ladder('cat', 'cot', word_set),
                          ['cat', 'cot'])
 
-    # def test_cat_to_dog(self):
-    #     word_set = WordSet(['cat', 'dot', 'cot', 'dog'])
-    #     self.assertEqual(word_ladder('cat', 'dog', word_set),
-    #                      ['cat', 'cot', 'dot', 'dog'])
+    def test_cat_to_dog(self):
+        word_set = WordSet(['cat', 'dot', 'cot', 'dog'])
+        self.assertEqual(word_ladder('cat', 'dog', word_set),
+                         ['cat', 'cot', 'dot', 'dog'])
 
     def test_mutations(self):
         alphabet = 'abcd'
-        self.assertItemsEqual(mutations('ab', alphabet),
-                              ['aa', 'ab', 'ab', 'ac', 'ad', 'bb', 'cb', 'db'])
+        self.assertEqual(
+            set(mutations('ab', alphabet)),
+            {'aa', 'ab', 'ab', 'ac', 'ad', 'bb', 'cb', 'db'}
+        )
 
 
 if __name__ == '__main__':

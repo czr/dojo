@@ -16,7 +16,11 @@ class SearchTest(unittest.TestCase):
             return path == [1, 3, 6]
         prev_pos = 1
         def children(path):
+            nonlocal prev_pos
             prev_pos += 2
             return [prev_pos - 1, prev_pos]
         result = search(prev_pos, success=success, children=children)
         self.assertEqual(result, [1, 3, 6])
+
+if __name__ == '__main__':
+    unittest.main()
