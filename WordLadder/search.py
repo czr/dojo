@@ -1,7 +1,10 @@
+from collections import deque
+
+
 def search(root, success, children):
-    agenda = [ [ root ] ]
+    agenda = deque([[root]])
     while agenda:
-        path = agenda.pop(0)
+        path = agenda.popleft()
         if success(path):
             return path
         seen = set(path)
