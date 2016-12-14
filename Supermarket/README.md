@@ -1,9 +1,12 @@
 # TODO
 
 * Item prices
-  * Price per weight ("per unit or part thereof")
+  * OK: Price per weight ("per unit")
+  * Price per weight ("part thereof")
+
 * Offers:
-  * BOGOF, 3 for 2 (more generally X for Y)
+  * OK: BOGOF, 3 for 2 (more generally X for Y)
+  * Resolve multiple competing discounts
   * Buy 2 at full price, get one at half price
   * Buy computer and monitor, get mouse free
   * Buy any three for £4, where the items come from a class of products
