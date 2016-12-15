@@ -62,10 +62,56 @@ class BasketTest(unittest.TestCase):
         price = calculate_price(basket, price_list, offers_list = offers_list)
         self.assertEqual(price, 10)
 
+    def test_five_for_three_with_five(self):
+        basket = [
+            ('ItemA', 1),
+            ('ItemA', 1),
+            ('ItemA', 1),
+            ('ItemA', 1),
+            ('ItemA', 1),
+        ]
+        price_list = { 'ItemA': 5 }
+        offers_list = { 'ItemA': 'five_for_three' }
+        price = calculate_price(basket, price_list, offers_list = offers_list)
+        self.assertEqual(price, 15)
+
+    def test_multiple_offers(self):
+        basket = [
+            ('ItemA', 1),
+            ('ItemA', 1),
+        ]
+        price_list = { 'ItemA': 5 }
+        offers_list = { 'ItemA': [ 'bogof', 'bogof' ] }
+        price = calculate_price(basket, price_list, offers_list = offers_list)
+        self.assertEqual(price, 5)
 
     def test_competing_offers(self):
-        basket = [('ItemA', 1), ('ItemA', 1)]
+        basket = [
+            ('ItemA', 1),
+            ('ItemA', 1),
+            ('ItemA', 1),
+            ('ItemA', 1),
+            ('ItemA', 1),
+            ('ItemA', 1),
+            ('ItemA', 1),
+            ('ItemA', 1),
+        ]
         price_list = { 'ItemA': 5 }
-        offers_list = { 'ItemA': [ 'bogof', 'three_for_two' ] }
-        # price = calculate_price(backet, price_list, offers_list = offers_list)
-        self.assertEqual(1,2);
+        offers_list = { 'ItemA': [ 'three_for_two', 'five_for_three' ] }
+        price = calculate_price(basket, price_list, offers_list = offers_list)
+        self.assertEqual(price, 25)
+
+        # {
+        #     bogof: [ ItemA, ItemB ]
+        #     buy_x_get_y: [ ItemC, ItemD ]
+        # }
+        # ( ItemA, ItemB ) == price of just one of A or B
+        # ( ItemA, ItemA ) == price of just one of A
+        # ( ItemC, ItemD ) == price of C
+        #
+        # {
+        #     bogof: [ ItemA ]
+        #     bogof: [ ItemB ]
+        # }
+        # ( ItemA, ItemB ) == price of A + B
+        # ( ItemA, ItemA ) == price of one of A
