@@ -85,6 +85,15 @@ class BasketTest(unittest.TestCase):
         price = calculate_price(basket, price_list, offers_list = offers_list)
         self.assertEqual(price, 5)
 
+    def test_discount_function(self):
+        basket = [
+            ('ItemA', 1),
+            ('ItemA', 1),
+        ]
+        price_list = { 'ItemA': 5 }
+        results = calculate_discount_two_for_one(basket, price_list)
+        self.assertEqual(results, [{ 'basket':[], 'discount':5}])
+
     # TODO
     # def test_competing_offers(self):
     #     basket = [
