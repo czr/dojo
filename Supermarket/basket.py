@@ -1,10 +1,6 @@
 def calculate_discounts(basket, offers_list, price_list):
-    quantities = {}
-    for item in basket:
-        quantities[item[0]] = quantities.get(item[0],0) + item[1]
-
     total_discount = 0
-    for item, quantity in quantities.items():
+    for item, quantity in basket.items.items():
         if item in offers_list:
             offers = offers_list[item]
             if type(offers) is not list:
@@ -51,8 +47,9 @@ def calculate_price(basket, price_list, offers_list = {}):
     # offers_list = { 'ItemA': 'bogof' }
     price = 0
 
-    for item in basket:
-        price += price_list[item[0]] * item[1]
+    print(basket.items)
+    for item, quantity in basket.items.items():
+        price += price_list[item] * quantity
 
     discount = calculate_discounts(basket, offers_list, price_list)
 
@@ -60,15 +57,15 @@ def calculate_price(basket, price_list, offers_list = {}):
 
 class Basket(object):
     """docstring for Basket."""
-    def __init__(self, items={}):
+    def __init__(self, items=None):
         super(Basket, self).__init__()
-        self.items = items
+        if items:
+            self.items = items
+        else:
+            self.items = {}
 
-    def __eq__(self, other):
+    def __cmp__(self, other):
         return self.items == other.items
 
     def add_item(self, name, quantity):
         self.items[name] = self.items.get(name, 0) + quantity
-
-    def remove_item(self, name, quantity):
-        pass
