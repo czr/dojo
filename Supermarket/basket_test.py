@@ -1,6 +1,6 @@
 import unittest
 
-from basket import calculate_price
+from basket import calculate_price, calculate_discount_two_for_one, Basket
 
 class BasketTest(unittest.TestCase):
 
@@ -86,13 +86,14 @@ class BasketTest(unittest.TestCase):
         self.assertEqual(price, 5)
 
     def test_discount_function(self):
-        basket = [
-            ('ItemA', 1),
-            ('ItemA', 1),
-        ]
+        basket = Basket()
+        basket.add_item('ItemA', 2)
         price_list = { 'ItemA': 5 }
         results = calculate_discount_two_for_one(basket, price_list)
-        self.assertEqual(results, [{ 'basket':[], 'discount':5}])
+        expected = [
+            { 'basket': Basket(), 'discount': 5 },
+        ]
+        self.assertEqual(results, expected)
 
     # TODO
     # def test_competing_offers(self):

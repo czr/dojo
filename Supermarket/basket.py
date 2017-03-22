@@ -32,6 +32,15 @@ def calculate_discount_three_for_two(quantity, price):
 def calculate_discount_five_for_three(quantity, price):
     return calculate_x_for_y(5, 3, quantity, price)
 
+def calculate_discount_two_for_one(basket, price_list):
+    applies_to = 'ItemA'
+    items = basket.items
+    if applies_to in items and items[applies_to] >= 2:
+        items[applies_to] = items[applies_to] - 2
+        return [ { 'basket': basket, 'discount': price_list[applies_to] } ]
+    else:
+        return []
+
 DISCOUNTS = {
     'bogof': calculate_discount_bogof,
     'three_for_two': calculate_discount_three_for_two,
@@ -48,3 +57,18 @@ def calculate_price(basket, price_list, offers_list = {}):
     discount = calculate_discounts(basket, offers_list, price_list)
 
     return price - discount
+
+class Basket(object):
+    """docstring for Basket."""
+    def __init__(self, items={}):
+        super(Basket, self).__init__()
+        self.items = items
+
+    def __eq__(self, other):
+        return self.items == other.items
+
+    def add_item(self, name, quantity):
+        self.items[name] = self.items.get(name, 0) + quantity
+
+    def remove_item(self, name, quantity):
+        pass
