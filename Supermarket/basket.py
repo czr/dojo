@@ -1,49 +1,4 @@
-def calculate_discounts(basket, offers_list, price_list):
-    total_discount = 0
-    for item, quantity in basket.items.items():
-        if item in offers_list:
-            offers = offers_list[item]
-            if type(offers) is not list:
-                offers = [offers]
-            best_discount = 0
-            for offer in offers:
-                discount_function = DISCOUNTS[offer]
-                discount, participating_items_count = discount_function(quantity, price_list[item])
-                if discount > best_discount:
-                    best_discount = discount
-            total_discount += best_discount
-
-    return total_discount
-
-def calculate_x_for_y(x, y, quantity, price):
-    participating_items_count = (quantity / x) * (x - y)
-    return (participating_items_count * price, participating_items_count)
-
-def calculate_discount_bogof(quantity, price):
-    return calculate_x_for_y(2, 1, quantity, price)
-
-def calculate_discount_three_for_two(quantity, price):
-    return calculate_x_for_y(3, 2, quantity, price)
-
-def calculate_discount_five_for_three(quantity, price):
-    return calculate_x_for_y(5, 3, quantity, price)
-
-def calculate_discount_two_for_one(basket, price_list):
-    applies_to = 'ItemA'
-    items = basket.items
-    if applies_to in items and items[applies_to] >= 2:
-        items[applies_to] = items[applies_to] - 2
-        return [ { 'basket': basket, 'discount': price_list[applies_to] } ]
-    else:
-        return []
-
-DISCOUNTS = {
-    'bogof': calculate_discount_bogof,
-    'three_for_two': calculate_discount_three_for_two,
-    'five_for_three': calculate_discount_five_for_three,
-}
-
-def calculate_price(basket, price_list, offers_list = {}):
+def calculate_price(basket, price_list, offers):
     # offers_list = { 'ItemA': 'bogof' }
     price = 0
 
@@ -51,18 +6,49 @@ def calculate_price(basket, price_list, offers_list = {}):
     for item, quantity in basket.items.items():
         price += price_list[item] * quantity
 
-    discount = calculate_discounts(basket, offers_list, price_list)
+    discount = calculate_discounts(basket, price_list, offers)
 
     return price - discount
+
+def calculate_discounts(basket, price_list, offers):
+    total_discount = 0
+
+    calculated_discounts = []
+    for offer in offers:
+        possibilities = offer(basket, price_list)
+        if possibilities:
+            best_discount = possibilities[0]['discount']
+            total_discount += best_discount
+
+    return total_discount
+
+def calculate_x_for_y(x, y, basket, price_list):
+    applies_to = 'ItemA'
+    items = basket.items
+    if items.get(applies_to, 0) >= x:
+        new_basket = Basket(items=basket.items.copy())
+        new_basket.items[applies_to] -= x
+        return [{
+            'basket': new_basket,
+            'discount': price_list[applies_to] * (x - y)
+        }]
+    else:
+        return []
+
+def calculate_discount_three_for_two(basket, price_list):
+    return calculate_x_for_y(3, 2, basket, price_list)
+
+def calculate_discount_five_for_three(basket, price_list):
+    return calculate_x_for_y(5, 3, basket, price_list)
+
+def calculate_discount_two_for_one(basket, price_list):
+    return calculate_x_for_y(2, 1, basket, price_list)
 
 class Basket(object):
     """docstring for Basket."""
     def __init__(self, items=None):
         super(Basket, self).__init__()
-        if items:
-            self.items = items
-        else:
-            self.items = {}
+        self.items = {} if items is None else items
 
     def __cmp__(self, other):
         return self.items == other.items
