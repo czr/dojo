@@ -100,6 +100,7 @@ class BasketTest(unittest.TestCase):
         offers_list = [calculate_discount_two_for_one]
         price = calculate_price(basket, price_list, offers_list)
         self.assertEqual(price, 10)
+
         # {
         #     bogof: [ ItemA, ItemB ]
         #     buy_x_get_y: [ ItemC, ItemD ]

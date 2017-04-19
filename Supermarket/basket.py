@@ -1,3 +1,5 @@
+from pprint import pprint
+
 def calculate_price(basket, price_list, offers):
     # offers_list = { 'ItemA': 'bogof' }
     price = 0
@@ -11,16 +13,36 @@ def calculate_price(basket, price_list, offers):
     return price - discount
 
 def calculate_discounts(basket, price_list, offers):
-    total_discount = 0
+    # total_discount = 0
 
-    calculated_discounts = []
+    # for offer in offers:
+    #     possibilities = offer(basket, price_list)
+    #     while possibilities:
+    #         total_discount += possibilities[0]['discount']
+    #         basket = possibilities[0]['basket']
+    #         possibilities = offer(basket, price_list)
+
+    discounts = [0]
+    discounts.extend(calculate_possible_discounts(0, basket, price_list, offers))
+
+    pprint(discounts)
+
+    return max(discounts)
+
+def calculate_possible_discounts(accumulated_discount, basket, price_list, offers):
+    discounts = []
+
     for offer in offers:
         possibilities = offer(basket, price_list)
         if possibilities:
-            best_discount = possibilities[0]['discount']
-            total_discount += best_discount
+            discounts.append(accumulated_discount + possibilities[0]['discount'])
+            discounts.extend(calculate_possible_discounts(
+                accumulated_discount + possibilities[0]['discount'],
+                possibilities[0]['basket'],
+                price_list,
+                offers))
 
-    return total_discount
+    return discounts
 
 def calculate_x_for_y(x, y, basket, price_list):
     applies_to = 'ItemA'
