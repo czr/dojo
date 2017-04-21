@@ -45,7 +45,9 @@ def calculate_possible_discounts(accumulated_discount, basket, price_list, offer
     return discounts
 
 def calculate_x_for_y(x, y, basket, price_list):
-    applies_to = 'ItemA'
+    applies_to = ['ItemA', 'ItemB']
+    #combinations = generate_combination(applies_to)
+    #[(ItemA=3, ItemB=0), (ItemA=2, ItemB=1), (ItemA=1, ItemB=2), (etc...]
     items = basket.items
     if items.get(applies_to, 0) >= x:
         new_basket = Basket(items=basket.items.copy())
@@ -74,6 +76,9 @@ class Basket(object):
 
     def __cmp__(self, other):
         return self.items == other.items
+
+    def __repr__(self):
+        return str(self.__dict__)
 
     def add_item(self, name, quantity):
         self.items[name] = self.items.get(name, 0) + quantity

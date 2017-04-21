@@ -76,12 +76,21 @@ class BasketTest(unittest.TestCase):
         self.assertEqual(price, 15)
 
     def test_discount_function(self):
-        basket = Basket()
-        basket.add_item('ItemA', 2)
+        basket = Basket({'ItemA': 2})
         price_list = { 'ItemA': 5 }
         results = calculate_discount_two_for_one(basket, price_list)
         expected = [
             { 'basket': Basket(), 'discount': 5 },
+        ]
+        self.assertEqual(results, expected)
+
+    def test_discount_function_multiple_items(self):
+        basket = Basket({'ItemA': 2, 'ItemB': 1})
+        price_list = { 'ItemA': 5, 'ItemB': 4 }
+        results = calculate_discount_two_for_one(basket, price_list)
+        expected = [
+            { 'basket': Basket({'ItemB': 1}), 'discount': 5 },
+            { 'basket': Basket({'ItemA': 1}), 'discount': 5 },
         ]
         self.assertEqual(results, expected)
 
@@ -100,6 +109,13 @@ class BasketTest(unittest.TestCase):
         offers_list = [calculate_discount_two_for_one]
         price = calculate_price(basket, price_list, offers_list)
         self.assertEqual(price, 10)
+
+    # def test_offer_permutations(self):
+    #     basket = Basket({'ItemA': 2, 'ItemB': 1})
+    #     price_list = {'ItemA': 5, 'ItemB': 4}
+    #     offers_list = [calculate_discount_two_for_one]
+    #     price = calculate_price(basket, price_list, offers_list)
+    #     self.assertEqual(price, 10)
 
         # {
         #     bogof: [ ItemA, ItemB ]
