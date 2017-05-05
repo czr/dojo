@@ -1,11 +1,16 @@
 import unittest
 
 from basket import \
+    generate_combinations, \
     calculate_price, \
     calculate_discount_two_for_one, \
     calculate_discount_three_for_two, \
     calculate_discount_five_for_three, \
-    Basket
+    Basket, \
+    hashabledict
+
+from pprint import pprint
+
 
 class BasketTest(unittest.TestCase):
 
@@ -75,6 +80,24 @@ class BasketTest(unittest.TestCase):
         price = calculate_price(basket, price_list, offers_list)
         self.assertEqual(price, 15)
 
+    def test_generate_combinations_single(self):
+        combinations = generate_combinations(['ItemA'], 3)
+        self.assertEqual(combinations, set([
+                hashabledict([
+                    ('ItemA', 3)
+                ])
+            ])
+        )
+
+    def test_generate_combinations_three(self):
+        combinations = generate_combinations(['ItemA', 'ItemB', 'ItemC'], 1)
+        self.assertEqual(combinations, set([
+                hashabledict([('ItemA', 1), ('ItemB', 0), ('ItemC', 0)]),
+                hashabledict([('ItemA', 0), ('ItemB', 1), ('ItemC', 0)]),
+                hashabledict([('ItemA', 0), ('ItemB', 0), ('ItemC', 1)]),
+            ])
+        )
+
     def test_discount_function(self):
         basket = Basket({'ItemA': 2})
         price_list = { 'ItemA': 5 }
@@ -82,17 +105,18 @@ class BasketTest(unittest.TestCase):
         expected = [
             { 'basket': Basket(), 'discount': 5 },
         ]
+        pprint(expected)
         self.assertEqual(results, expected)
 
-    def test_discount_function_multiple_items(self):
-        basket = Basket({'ItemA': 2, 'ItemB': 1})
-        price_list = { 'ItemA': 5, 'ItemB': 4 }
-        results = calculate_discount_two_for_one(basket, price_list)
-        expected = [
-            { 'basket': Basket({'ItemB': 1}), 'discount': 5 },
-            { 'basket': Basket({'ItemA': 1}), 'discount': 5 },
-        ]
-        self.assertEqual(results, expected)
+    # def test_discount_function_multiple_items(self):
+    #     basket = Basket({'ItemA': 2, 'ItemB': 1})
+    #     price_list = { 'ItemA': 5, 'ItemB': 4 }
+    #     results = calculate_discount_two_for_one(basket, price_list)
+    #     expected = [
+    #         { 'basket': Basket({'ItemB': 1}), 'discount': 5 },
+    #         { 'basket': Basket({'ItemA': 1}), 'discount': 5 },
+    #     ]
+    #     self.assertEqual(results, expected)
 
     # TODO - refactor discount methods
     def test_competing_offers(self):

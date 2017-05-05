@@ -44,20 +44,38 @@ def calculate_possible_discounts(accumulated_discount, basket, price_list, offer
 
     return discounts
 
+def generate_combinations(items, quantity):
+    # FINISH ME
+    results = set()
+    for i in range(0, quantity):
+        subitems
+        for subset in generate_combinations()
+    return set([
+        hashabledict([
+            (items[0], quantity)
+        ])
+    ])
+
 def calculate_x_for_y(x, y, basket, price_list):
     applies_to = ['ItemA', 'ItemB']
-    #combinations = generate_combination(applies_to)
+    #combinations = generate_combination(applies_to, x)
     #[(ItemA=3, ItemB=0), (ItemA=2, ItemB=1), (ItemA=1, ItemB=2), (etc...]
+
     items = basket.items
-    if items.get(applies_to, 0) >= x:
-        new_basket = Basket(items=basket.items.copy())
-        new_basket.items[applies_to] -= x
-        return [{
-            'basket': new_basket,
-            'discount': price_list[applies_to] * (x - y)
-        }]
-    else:
-        return []
+    results = []
+
+    for applies in applies_to:
+        print "checking " + applies
+        if items.get(applies, 0) >= x:
+            print applies + " in basket"
+            new_basket = Basket(items=basket.items.copy())
+            new_basket.remove_item(applies, x)
+            results.append({
+                'basket': new_basket,
+                'discount': price_list[applies] * (x - y)
+            })
+
+    return results
 
 def calculate_discount_three_for_two(basket, price_list):
     return calculate_x_for_y(3, 2, basket, price_list)
@@ -75,10 +93,26 @@ class Basket(object):
         self.items = {} if items is None else items
 
     def __cmp__(self, other):
-        return self.items == other.items
+        return cmp(self.items, other.items)
 
     def __repr__(self):
         return str(self.__dict__)
 
     def add_item(self, name, quantity):
         self.items[name] = self.items.get(name, 0) + quantity
+
+    def remove_item(self, name, quantity):
+        if self.items[name] > quantity:
+            self.items[name] -= quantity
+        elif self.items[name] == quantity:
+            self.items.pop(name)
+        else:
+            raise Exception(
+                "Can't remove {} of {} from basket. Only {} in basket.".format(
+                    quantity, name, self.items[name]
+                )
+            )
+
+class hashabledict(dict):
+    def __hash__(self):
+        return hash(tuple(sorted(self.items())))
