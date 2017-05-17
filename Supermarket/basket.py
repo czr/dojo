@@ -45,16 +45,25 @@ def calculate_possible_discounts(accumulated_discount, basket, price_list, offer
     return discounts
 
 def generate_combinations(items, quantity):
-    # FINISH ME
-    results = set()
-    for i in range(0, quantity):
-        subitems
-        for subset in generate_combinations()
-    return set([
-        hashabledict([
-            (items[0], quantity)
+    if not items:
+        raise Exception("generate_combinations called with empty items")
+
+    if len(items) == 1:
+        return set([
+            hashabledict([
+                (items[0], quantity)
+            ])
         ])
-    ])
+
+    results = set()
+    for i in range(0, quantity + 1):
+        subitems = items[1:]
+        for subset in generate_combinations(subitems, quantity - i):
+            results.add(hashabledict(
+                [(items[0], i)] + subset.items()
+            ))
+
+    return results
 
 def calculate_x_for_y(x, y, basket, price_list):
     applies_to = ['ItemA', 'ItemB']
