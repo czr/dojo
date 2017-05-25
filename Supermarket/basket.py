@@ -67,22 +67,26 @@ def generate_combinations(items, quantity):
 
 def calculate_x_for_y(x, y, basket, price_list):
     applies_to = ['ItemA', 'ItemB']
-    #combinations = generate_combination(applies_to, x)
+    combinations = generate_combinations(applies_to, x)
     #[(ItemA=3, ItemB=0), (ItemA=2, ItemB=1), (ItemA=1, ItemB=2), (etc...]
 
-    items = basket.items
+    # Iterate over combinations, see whether it fits the basket,
+    # return discount if so. Combination fits basket if each item in
+    # combination has at least that quantity in the basket.
+
     results = []
 
-    for applies in applies_to:
-        print "checking " + applies
-        if items.get(applies, 0) >= x:
-            print applies + " in basket"
+    for combination in combinations:
+        try:
             new_basket = Basket(items=basket.items.copy())
-            new_basket.remove_item(applies, x)
-            results.append({
-                'basket': new_basket,
-                'discount': price_list[applies] * (x - y)
-            })
+            basket.remove_items(combination)
+            for item in combination:
+                results.append({
+                    'basket': new_basket,
+                    'discount': price_list[item] * (x - y)
+                })
+        except NotInBasketException:
+            next
 
     return results
 
@@ -94,6 +98,9 @@ def calculate_discount_five_for_three(basket, price_list):
 
 def calculate_discount_two_for_one(basket, price_list):
     return calculate_x_for_y(2, 1, basket, price_list)
+
+class NotInBasketException(Exception):
+    pass
 
 class Basket(object):
     """docstring for Basket."""
@@ -110,15 +117,21 @@ class Basket(object):
     def add_item(self, name, quantity):
         self.items[name] = self.items.get(name, 0) + quantity
 
+    def remove_items(self, combination):
+        for item, quantity in combination.items():
+            self.remove_item(item, quantity)
+
     def remove_item(self, name, quantity):
-        if self.items[name] > quantity:
-            self.items[name] -= quantity
-        elif self.items[name] == quantity:
-            self.items.pop(name)
-        else:
-            raise Exception(
+        if quantity > 0:
+            if self.items.get(name, 0) > quantity:
+                self.items[name] -= quantity
+                return
+            if self.items.get(name, 0) == quantity:
+                self.items.pop(name)
+                return
+            raise NotInBasketException(
                 "Can't remove {} of {} from basket. Only {} in basket.".format(
-                    quantity, name, self.items[name]
+                    quantity, name, self.items.get(name, 0)
                 )
             )
 
