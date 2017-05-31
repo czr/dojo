@@ -79,7 +79,7 @@ def calculate_x_for_y(x, y, basket, price_list):
     for combination in combinations:
         try:
             new_basket = Basket(items=basket.items.copy())
-            basket.remove_items(combination)
+            new_basket.remove_items(combination)
             for item in combination:
                 results.append({
                     'basket': new_basket,
@@ -113,6 +113,9 @@ class Basket(object):
 
     def __repr__(self):
         return str(self.__dict__)
+
+    def __hash__(self):
+        return hash(str(self))
 
     def add_item(self, name, quantity):
         self.items[name] = self.items.get(name, 0) + quantity

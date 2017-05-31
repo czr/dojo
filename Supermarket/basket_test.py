@@ -111,11 +111,14 @@ class BasketTest(unittest.TestCase):
     def test_discount_function_multiple_items(self):
         basket = Basket({'ItemA': 2, 'ItemB': 1})
         price_list = { 'ItemA': 5, 'ItemB': 4 }
-        results = calculate_discount_two_for_one(basket, price_list)
-        expected = [
-            { 'basket': Basket({'ItemB': 1}), 'discount': 5 },
-            { 'basket': Basket({'ItemA': 1}), 'discount': 5 },
-        ]
+        results = set([hashabledict(i) for i in calculate_discount_two_for_one(basket, price_list)])
+        expected = set([
+            hashabledict({ 'basket': Basket({'ItemB': 1}), 'discount': 4 }),
+            hashabledict({ 'basket': Basket({'ItemB': 1}), 'discount': 5 }),
+            hashabledict({ 'basket': Basket({'ItemA': 1}), 'discount': 5 }),
+            hashabledict({ 'basket': Basket({'ItemA': 1}), 'discount': 4 }),
+        ])
+
         self.assertEqual(results, expected)
 
     # TODO - refactor discount methods
