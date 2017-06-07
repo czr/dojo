@@ -114,6 +114,18 @@ class BasketTest(unittest.TestCase):
 
         self.assertItemsEqual(results, expected)
 
+    def test_discount_function_multiple_items_in_discount(self):
+        basket = Basket({'ItemA': 2, 'ItemB': 3})
+        price_list = { 'ItemA': 5, 'ItemB': 4 }
+        results = calculate_discount_five_for_three(basket, price_list)
+        expected = [
+            { 'basket': Basket({}), 'discount': 10 },
+            { 'basket': Basket({}), 'discount': 9 },
+            { 'basket': Basket({}), 'discount': 8 },
+        ]
+
+        self.assertItemsEqual(results, expected)
+
     # TODO - refactor discount methods
     def test_competing_offers(self):
         basket = Basket({'ItemA': 8})
