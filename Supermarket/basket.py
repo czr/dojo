@@ -49,17 +49,14 @@ def generate_combinations(items, quantity):
         raise Exception("generate_combinations called with empty items")
 
     if len(items) == 1:
-        return [{items[0]: quantity}]
-
-    results = []
-    for i in range(0, quantity + 1):
-        subitems = items[1:]
-        for subset in generate_combinations(subitems, quantity - i):
-            result = {items[0]: i}
-            result.update(subset)
-            results.append(result)
-
-    return results
+        yield {items[0]: quantity}
+    else:
+        for i in range(0, quantity + 1):
+            subitems = items[1:]
+            for subset in generate_combinations(subitems, quantity - i):
+                result = {items[0]: i}
+                result.update(subset)
+                yield result
 
 def calculate_x_for_y(x, y, basket, price_list):
     applies_to = ['ItemA', 'ItemB']
