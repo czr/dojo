@@ -49,19 +49,15 @@ def generate_combinations(items, quantity):
         raise Exception("generate_combinations called with empty items")
 
     if len(items) == 1:
-        return set([
-            hashabledict([
-                (items[0], quantity)
-            ])
-        ])
+        return [{items[0]: quantity}]
 
-    results = set()
+    results = []
     for i in range(0, quantity + 1):
         subitems = items[1:]
         for subset in generate_combinations(subitems, quantity - i):
-            results.add(hashabledict(
-                [(items[0], i)] + subset.items()
-            ))
+            result = {items[0]: i}
+            result.update(subset)
+            results.append(result)
 
     return results
 
@@ -77,16 +73,18 @@ def calculate_x_for_y(x, y, basket, price_list):
     results = []
 
     for combination in combinations:
+        new_basket = Basket(items=basket.items.copy())
         try:
-            new_basket = Basket(items=basket.items.copy())
             new_basket.remove_items(combination)
-            for item in combination:
-                results.append({
-                    'basket': new_basket,
-                    'discount': price_list[item] * (x - y)
-                })
         except NotInBasketException:
-            next
+            pass
+        else:
+            for item, quantity in combination.items():
+                if quantity:
+                    results.append({
+                        'basket': new_basket,
+                        'discount': price_list[item] * (x - y)
+                    })
 
     return results
 
@@ -108,14 +106,14 @@ class Basket(object):
         super(Basket, self).__init__()
         self.items = {} if items is None else items
 
-    def __cmp__(self, other):
-        return cmp(self.items, other.items)
-
     def __repr__(self):
         return str(self.__dict__)
 
-    def __hash__(self):
-        return hash(str(self))
+    def __eq__(self, other):
+        return sorted(self.items.items()) == sorted(other.items.items())
+
+    # def __hash__(self):
+    #     return hash(tuple(sorted(self.items.items())))
 
     def add_item(self, name, quantity):
         self.items[name] = self.items.get(name, 0) + quantity
@@ -137,7 +135,3 @@ class Basket(object):
                     quantity, name, self.items.get(name, 0)
                 )
             )
-
-class hashabledict(dict):
-    def __hash__(self):
-        return hash(tuple(sorted(self.items())))
