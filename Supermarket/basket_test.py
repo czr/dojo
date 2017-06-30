@@ -1,8 +1,10 @@
 import unittest
+import sys
 
 from basket import \
     generate_combinations, \
     calculate_price, \
+    calculate_possible_discounts, \
     calculate_discount_two_for_one, \
     calculate_discount_three_for_two, \
     calculate_discount_five_for_three, \
@@ -81,14 +83,14 @@ class BasketTest(unittest.TestCase):
 
     def test_generate_combinations_single(self):
         combinations = generate_combinations(['ItemA'], 3)
-        self.assertItemsEqual(combinations, [{'ItemA': 3}])
+        self.assertItemsEqual(combinations, [['ItemA', 'ItemA', 'ItemA']])
 
     def test_generate_combinations_three(self):
         combinations = generate_combinations(['ItemA', 'ItemB', 'ItemC'], 1)
         self.assertItemsEqual(combinations, [
-                {'ItemA': 1, 'ItemB': 0, 'ItemC': 0},
-                {'ItemA': 0, 'ItemB': 1, 'ItemC': 0},
-                {'ItemA': 0, 'ItemB': 0, 'ItemC': 1},
+                ['ItemA'],
+                ['ItemB'],
+                ['ItemC'],
             ]
         )
 
@@ -123,10 +125,22 @@ class BasketTest(unittest.TestCase):
             { 'basket': Basket({}), 'discount': 9 },
             { 'basket': Basket({}), 'discount': 8 },
         ]
-
         self.assertItemsEqual(results, expected)
 
-    # TODO - refactor discount methods
+    def test_calculate_discounts_multiple(self):
+        basket = Basket({'ItemA': 2, 'ItemB': 3})
+        price_list = { 'ItemA': 5, 'ItemB': 4 }
+        offers_list = [calculate_discount_five_for_three]
+        results = calculate_possible_discounts(
+            0,
+            basket,
+            price_list,
+            offers_list
+        )
+        expected = [ 0, 10, 9, 8 ]
+        self.assertItemsEqual(results, expected)
+
+    # TODO - pull applies_to out of calculate_x_for_y
     def test_competing_offers(self):
         basket = Basket({'ItemA': 8})
         price_list = { 'ItemA': 5 }
@@ -141,6 +155,14 @@ class BasketTest(unittest.TestCase):
         offers_list = [calculate_discount_two_for_one]
         price = calculate_price(basket, price_list, offers_list)
         self.assertEqual(price, 10)
+
+    def test_calculate_possible_discounts_deep_recursion(self):
+        basket = Basket({'ItemA': 40000000000000})
+        price_list = {'ItemA': 5}
+        offers_list = [calculate_discount_two_for_one]
+        price = calculate_price(basket, price_list, offers_list)
+        self.assertEqual(price, 100000000000000)
+
 
     # def test_offer_permutations(self):
     #     basket = Basket({'ItemA': 2, 'ItemB': 1})

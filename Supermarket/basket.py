@@ -1,4 +1,4 @@
-from pprint import pprint
+import itertools
 
 def calculate_price(basket, price_list, offers):
     # offers_list = { 'ItemA': 'bogof' }
@@ -12,35 +12,35 @@ def calculate_price(basket, price_list, offers):
 
     return price - discount
 
+
 def calculate_discounts(basket, price_list, offers):
-    # total_discount = 0
-
-    # for offer in offers:
-    #     possibilities = offer(basket, price_list)
-    #     while possibilities:
-    #         total_discount += possibilities[0]['discount']
-    #         basket = possibilities[0]['basket']
-    #         possibilities = offer(basket, price_list)
-
     discounts = [0]
-    discounts.extend(calculate_possible_discounts(0, basket, price_list, offers))
-
-    pprint(discounts)
+    discounts.extend(
+        calculate_possible_discounts(0, basket, price_list, offers)
+    )
 
     return max(discounts)
 
-def calculate_possible_discounts(accumulated_discount, basket, price_list, offers):
-    discounts = []
 
-    for offer in offers:
-        possibilities = offer(basket, price_list)
-        if possibilities:
-            discounts.append(accumulated_discount + possibilities[0]['discount'])
-            discounts.extend(calculate_possible_discounts(
-                accumulated_discount + possibilities[0]['discount'],
-                possibilities[0]['basket'],
-                price_list,
-                offers))
+def calculate_possible_discounts(accumulated_discount,
+                                 basket,
+                                 price_list,
+                                 offers):
+    discounts = [0]
+    unchecked = [{"basket": basket, "accumulated_discount": 0}]
+
+    while unchecked:
+        current = unchecked.pop()
+        for offer in offers:
+            possibilities = offer(current["basket"], price_list)
+            for possibility in possibilities:
+                discounts.append(
+                    current["accumulated_discount"] + possibility['discount']
+                )
+                unchecked.append({
+                    "basket": possibility["basket"],
+                    "accumulated_discount": possibility["discount"] + current["accumulated_discount"],
+                })
 
     return discounts
 
@@ -49,17 +49,18 @@ def generate_combinations(items, quantity):
         raise Exception("generate_combinations called with empty items")
 
     if len(items) == 1:
-        yield {items[0]: quantity}
+        yield [items[0]] * quantity
     else:
         for i in range(0, quantity + 1):
             subitems = items[1:]
             for subset in generate_combinations(subitems, quantity - i):
-                result = {items[0]: i}
-                result.update(subset)
+                result = [items[0]] * i
+                result.extend(subset)
                 yield result
 
 def calculate_x_for_y(x, y, basket, price_list):
     applies_to = ['ItemA', 'ItemB']
+
     combinations = generate_combinations(applies_to, x)
     #[(ItemA=3, ItemB=0), (ItemA=2, ItemB=1), (ItemA=1, ItemB=2), (etc...]
 
@@ -76,12 +77,17 @@ def calculate_x_for_y(x, y, basket, price_list):
         except NotInBasketException:
             pass
         else:
-            for item, quantity in combination.items():
-                if quantity:
-                    results.append({
-                        'basket': new_basket,
-                        'discount': price_list[item] * (x - y)
-                    })
+            discount_items = itertools.combinations(combination, x - y)
+            discounts = set()
+            for possible_discount_items in discount_items:
+                discounts.add(
+                    sum(price_list[item] for item in possible_discount_items)
+                )
+            for discount in discounts:
+                results.append({
+                    'basket': new_basket,
+                    'discount': discount
+                })
 
     return results
 
@@ -115,9 +121,9 @@ class Basket(object):
     def add_item(self, name, quantity):
         self.items[name] = self.items.get(name, 0) + quantity
 
-    def remove_items(self, combination):
-        for item, quantity in combination.items():
-            self.remove_item(item, quantity)
+    def remove_items(self, items):
+        for item in items:
+            self.remove_item(item, 1)
 
     def remove_item(self, name, quantity):
         if quantity > 0:
