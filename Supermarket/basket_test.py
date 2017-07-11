@@ -157,11 +157,11 @@ class BasketTest(unittest.TestCase):
         self.assertEqual(price, 10)
 
     def test_calculate_possible_discounts_deep_recursion(self):
-        basket = Basket({'ItemA': 40000000000000})
+        basket = Basket({'ItemA': 40000})
         price_list = {'ItemA': 5}
         offers_list = [calculate_discount_two_for_one]
         price = calculate_price(basket, price_list, offers_list)
-        self.assertEqual(price, 100000000000000)
+        self.assertEqual(price, 100000)
 
 
     # def test_offer_permutations(self):
